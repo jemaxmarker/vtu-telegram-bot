@@ -9,12 +9,14 @@ BOT_TOKEN = "8026951635:AAGX8UhpvLBz8c12GoaScIcYDP_LMUnnkTg"
 OPENROUTER_API_KEY = "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"
 
 bot = telebot.TeleBot(BOT_TOKEN)
-app = Flask(__name__)
+app = Flask(__name__)  # fixed __name__, not name
 
+# ✅ Telegram bot command
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.reply_to(message, "🚀 Hustler AI is live! Ask me anything.")
 
+# ✅ Chat with OpenRouter AI
 @bot.message_handler(func=lambda m: True)
 def chat_with_ai(message):
     try:
@@ -29,12 +31,18 @@ def chat_with_ai(message):
         }
 
         res = requests.post(url, headers=headers, data=json.dumps(payload))
-        reply = res.json()['choices'][0]['message']['content']
-        bot.reply_to(message, reply.strip())
+        data = res.json()
+
+        if "choices" in data and data["choices"]:
+            reply = data["choices"][0]["message"]["content"]
+            bot.reply_to(message, reply.strip())
+        else:
+            bot.reply_to(message, "⚠️ AI didn't return a valid reply. Try again.")
+
     except Exception as e:
         bot.reply_to(message, f"⚠️ Error: {e}")
 
-# Flask routes
+# ✅ Flask routes for Render health checks
 @app.route('/')
 def index():
     return "Hustler AI is running..."
@@ -43,7 +51,7 @@ def index():
 def health_check():
     return "OK", 200
 
-# Start Flask server AND Telegram bot
+# ✅ Start Flask + Bot
 def start_bot():
     bot.infinity_polling()
 
