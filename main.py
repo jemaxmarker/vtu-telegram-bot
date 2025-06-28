@@ -1,34 +1,24 @@
 import os
 import telebot
-from flask import Flask, request
+import openai
 
-API_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("RENDER_EXTERNAL_URL")
+# Safely load your credentials
+TELEGRAM_BOT_TOKEN = os.getenv("8026951635:AAGX8UhpvLBz8c12GoaScIcYDP_LMUnnkTg")
+OPENAI_API_KEY = os.getenv("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")
 
-bot = telebot.TeleBot(API_TOKEN)
-app = Flask(__name__)
+# Initialize
+bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
+openai.api_key = OPENAI_API_KEY
 
-@app.route(f"/{API_TOKEN}", methods=['POST'])
-def webhook():
-    json_str = request.get_data().decode('UTF-8')
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return "", 200
+@bot.message_handler(func=lambda message: True)
+def chat_with_gpt(message):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": message.text}]
+        )
+        bot.reply_to(message, response['choices'][0]['message']['content'])
+    except Exception as e:
+        bot.reply_to(message, f"Error: {str(e)}")
 
-@app.route("/healthz")
-def health_check():
-    return "OK", 200
-
-@app.route("/")
-def index():
-    return "Bot is live", 200
-
-@bot.message_handler(commands=['start'])
-def handle_start(message):
-    bot.reply_to(message, "Welcome! Bot is running via webhook on Render.")
-
-if __name__ == "__main__":
-    bot.remove_webhook()
-    bot.set_webhook(url=f"{WEBHOOK_URL}/{API_TOKEN}")
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-    
+bot.polling()
