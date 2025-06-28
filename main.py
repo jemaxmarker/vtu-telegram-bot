@@ -11,7 +11,7 @@ OPENROUTER_API_KEY = "sk-or-v1-c5096260a4bf01934bbb55133f3ed11882788563226952a55
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
-@bot.route('/')
+@app.route('/')
 def index():
     return "Hustler AI is running..."
 
