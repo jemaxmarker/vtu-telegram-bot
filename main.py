@@ -1,7 +1,6 @@
 import telebot
 import requests
 import json
-import os
 from flask import Flask
 
 # ✅ Your actual tokens
@@ -10,10 +9,6 @@ OPENROUTER_API_KEY = "sk-or-v1-c5096260a4bf01934bbb55133f3ed11882788563226952a55
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
-
-@app.route('/')
-def index():
-    return "Hustler AI is running..."
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -38,13 +33,13 @@ def chat_with_ai(message):
     except Exception as e:
         bot.reply_to(message, f"⚠️ Error: {e}")
 
-# 🔁 Start both Flask and Telegram polling on Render
-if __name__ == "__main__":
-    import threading
+# 🌍 Web routes for Render health checks
+@app.route('/')
+def index():
+    return "Hustler AI is running..."
 
-    # Start Telegram bot polling in a separate thread
-    threading.Thread(target=bot.infinity_polling).start()
+@app.route('/healthz')
+def health_check():
+    return "OK", 200
 
-    # Start Flask app (Render looks for open port)
-    PORT = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=PORT)
+# 🌀 Run the Telegram bot in a separate thread
